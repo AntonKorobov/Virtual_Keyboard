@@ -347,3 +347,17 @@ function addKeyboard() {
     //     });
     // })
 }
+
+document.addEventListener('keydown', function(event) {
+    for (key of KEY_BUTTONS_ENG) {
+        if (event.code == key.code) {
+            let pressedButton = document.querySelector(`.keyboard__key_${key.code}`);
+            // console.log(pressedButton);
+            pressedButton.classList.add("keyboard__key_tap");
+            console.log(key.small); //!!!!
+            pressedButton.addEventListener("animationend", (animationEvent) => {
+                pressedButton.classList.remove("keyboard__key_tap");
+            });
+        }
+    }
+});
