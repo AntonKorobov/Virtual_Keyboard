@@ -1,6 +1,4 @@
-document.body.onload = addKeyboard;
-
-const KEY_BUTTONS_ENG = [{
+const RUS_LAYOUT = [{
         small: '`',
         shift: '~',
         code: 'Backquote',
@@ -327,37 +325,50 @@ const KEY_BUTTONS_ENG = [{
     },
 ];
 
-function addKeyboard() {
-    const Keyboard_Wrapper = document.createElement("div");
-    Keyboard_Wrapper.classList.add("keyboard-wrapper");
-    document.body.appendChild(Keyboard_Wrapper);
-
-    for (key of KEY_BUTTONS_ENG) {
-        let newElement = document.createElement("div");
-        newElement.classList.add("keyboard__key");
-        newElement.classList.add(`keyboard__key_${key.code}`);
-
-        newElement.innerHTML = `<div class="eng"><div class="caseDown">${key.small}</div><div class="caseUp key_hide">${key.shift}</div></div>`;
-        Keyboard_Wrapper.appendChild(newElement);
-    };
-
-    // KEY_BUTTONS_ENG.forEach(function() {
-    //     newElement.addEventListener('click', function() {//NewElement not defined
-    //         console.log(key.small);
-    //     });
-    // })
-}
-
-document.addEventListener('keydown', function(event) {
-    for (key of KEY_BUTTONS_ENG) {
-        if (event.code == key.code) {
-            let pressedButton = document.querySelector(`.keyboard__key_${key.code}`);
-            // console.log(pressedButton);
-            pressedButton.classList.add("keyboard__key_tap");
-            console.log(key.small); //!!!!
-            pressedButton.addEventListener("animationend", (animationEvent) => {
-                pressedButton.classList.remove("keyboard__key_tap");
-            });
-        }
+class Keyboard {
+    constructor(layout) {
+        this.layout = layout;
+        this.isCaps = false;
     }
-});
+
+    addKeyboard() {
+        const Keyboard_Wrapper = document.createElement("div");
+        Keyboard_Wrapper.classList.add("keyboard-wrapper");
+        document.body.appendChild(Keyboard_Wrapper);
+        this.layout.forEach((key, index) => {
+            let newElement = document.createElement("div");
+            newElement.classList.add("keyboard__key");
+            newElement.classList.add(`keyboard__key_${key.code}`);
+            newElement.innerHTML = `<div class="eng"><div class="caseDown">${key.small}</div><div class="caseUp key_hide">${key.shift}</div></div>`;
+            Keyboard_Wrapper.appendChild(newElement);
+            //--------------------Click-event
+            newElement.addEventListener('click', function() {
+                console.log(key.small);
+                let pressedButton = document.querySelector(`.keyboard__key_${key.code}`);
+                pressedButton.classList.add("keyboard__key_tap");
+                pressedButton.addEventListener("animationend", (animationEvent) => {
+                    pressedButton.classList.remove("keyboard__key_tap");
+                });
+            });
+        });
+
+        //------------------Keydown-event
+        let currentLayout = this.layout; //!!!!
+        document.addEventListener('keydown', function(event) {
+            // console.log(this.layout);//!!!!
+            currentLayout.forEach((key, index) => {
+                if (event.code == key.code) {
+                    console.log(key.small);
+                    let pressedButton = document.querySelector(`.keyboard__key_${key.code}`);
+                    pressedButton.classList.add("keyboard__key_tap");
+                    pressedButton.addEventListener("animationend", (animationEvent) => {
+                        pressedButton.classList.remove("keyboard__key_tap");
+                    });
+                };
+            });
+        });
+    };
+};
+let my_keyboard = new Keyboard(RUS_LAYOUT);
+
+document.body.onload = my_keyboard.addKeyboard();;
