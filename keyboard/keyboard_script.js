@@ -654,119 +654,106 @@ const RUS_LAYOUT = [{
 ];
 
 class Keyboard {
-    constructor() {
-        this.layout = RUS_LAYOUT;
+    constructor(layout = ENG_LAYOUT) {
+        this.layout = layout;
         this.isCaps = false;
     }
 
-    addKeyboard() {
-        let currentLayout = this.layout; //!!!!
-
-        if (currentLanguage === "ENG") {
-            currentLayout = RUS_LAYOUT;
-            this.layout = RUS_LAYOUT; //!!!
-            currentLanguage = "RUS";
+    changeLanguage() {
+        if (this.layout === ENG_LAYOUT) {
+            this.layout = RUS_LAYOUT;
         } else {
-            currentLayout = ENG_LAYOUT;
-            this.layout = ENG_LAYOUT; //!!!
-            currentLanguage = "ENG"
+            this.layout = ENG_LAYOUT;
         }
+        this.addKeyboard();
+    }
+
+    addKeyboard() {
         document.body.innerHTML = '';
 
         const Keyboard_Wrapper = document.createElement("div");
         Keyboard_Wrapper.classList.add("keyboard-wrapper");
         document.body.appendChild(Keyboard_Wrapper);
-        currentLayout.forEach((key, index) => {
+        this.layout.forEach((key, index) => {
             let newElement = document.createElement("div");
             newElement.classList.add("keyboard__key");
             newElement.classList.add(`keyboard__key_${key.code}`);
-            newElement.innerHTML = `<div class="caseDown">${key.small}</div><div class="caseUp key_hide">${key.shift}</div>`;
+            newElement.innerHTML = `<div class="caseDown">${key.small}</div><div class="caseUp key_hide">${(key.shift)||(key.small)}</div>`;
             Keyboard_Wrapper.appendChild(newElement);
+
             //--------------------Click-event
             newElement.addEventListener('click', function() {
                 console.log(key.small);
                 let pressedButton = document.querySelector(`.keyboard__key_${key.code}`);
                 pressedButton.classList.add("keyboard__key_click");
-                pressedButton.addEventListener("animationend", (animationEvent) => {
+                pressedButton.addEventListener("animationend", () => {
                     pressedButton.classList.remove("keyboard__key_click");
                 });
-                // addAnimation("click");
             });
         });
 
         //------------------Keydown-event
-        document.addEventListener('keydown', function(event) {
-            // console.log(this.layout);//!!!!
-            currentLayout.forEach((key, index) => {
+        document.addEventListener('keydown', (event) => {
+            this.layout.forEach((key, index) => {
                 if (event.code == key.code) {
-
                     pressedButtonViewer[key.code] = true;
-
                     console.log(key.small);
                     let pressedButton = document.querySelector(`.keyboard__key_${key.code}`);
                     pressedButton.classList.add("keyboard__key_tap");
-                    document.addEventListener('keyup', function(event) {
+                    addEventListener('keyup', function(event) {
                         pressedButton.classList.remove("keyboard__key_tap");
-
-                        pressedButtonViewer[key.code] = false;
+                        delete pressedButtonViewer[key.code];
                     });
-                    // addAnimation("keydown");
                 };
             });
         });
-
-        // function addAnimation(typeEvent) {
-        //     if (typeEvent = "click") {
-        //         pressedButton.classList.add("keyboard__key_click");
-        //         pressedButton.addEventListener("animationend", (animationEvent) => {
-        //             pressedButton.classList.remove("keyboard__key_click");
-        //         });
-        //     }
-        //     if (typeEvent = "keydown") {
-        //         pressedButton.classList.add("keyboard__key_tap");
-        //         document.addEventListener('keyup', function(event) {
-        //             pressedButton.classList.remove("keyboard__key_tap");
-        //         });
-        //     }
-        // }
     };
-    changeCase(caps) {
-        let currentLayout = this.layout;
 
-        if (caps === "lock") {
-            if (this.isCaps === true) {
-                currentLayout.forEach((key, index) => {
+    changeCase(isCaps) {
+        if (isCaps) {
+            // removeEventListener("keyup", () => { return }); //!!!!
+            // console.log(this.isCaps);
+            if (this.isCaps === false) {
+                this.layout.forEach((key, index) => {
                     let keyboardButton = document.querySelector(`.keyboard__key_${key.code}`);
-                    keyboardButton.innerHTML = `<div class="caseDown">${key.small}</div><div class="caseUp key_hide">${key.shift||key.small}</div>`;
-                    this.isCaps = false;
+                    keyboardButton.firstChild.classList.add("key_hide");
+                    keyboardButton.firstChild.nextSibling.classList.remove("key_hide");
+                    this.isCaps = true;
+                    return;
                 });
             } else {
-                currentLayout.forEach((key, index) => {
+                this.layout.forEach((key, index) => {
                     let keyboardButton = document.querySelector(`.keyboard__key_${key.code}`);
-                    keyboardButton.innerHTML = `<div class="caseDown key_hide">${key.small}</div><div class="caseUp">${key.shift||key.small}</div>`;
-                    this.isCaps = true;
+                    keyboardButton.firstChild.classList.remove("key_hide");
+                    keyboardButton.firstChild.nextSibling.classList.add("key_hide");
+                    this.isCaps = false;
+                    return;
                 });
             }
-            console.log(this.isCaps);
         } else {
-            currentLayout.forEach((key, index) => {
+            this.layout.forEach((key, index) => {
                 let keyboardButton = document.querySelector(`.keyboard__key_${key.code}`);
-                keyboardButton.innerHTML = `<div class="caseDown key_hide">${key.small}</div><div class="caseUp">${key.shift||key.small}</div>`;
-                this.isCaps = true;
+                keyboardButton.firstChild.classList.add("key_hide");
+                keyboardButton.firstChild.nextSibling.classList.remove("key_hide");
             });
-            document.addEventListener('keyup', function(event) {
-                currentLayout.forEach((key, index) => {
-                    let keyboardButton = document.querySelector(`.keyboard__key_${key.code}`);
-                    keyboardButton.innerHTML = `<div class="caseDown">${key.small}</div><div class="caseUp key_hide">${key.shift||key.small}</div>`;
+            this.isCaps = true;
+            addEventListener('keyup', (event) => { //!!!!!
+                if ((pressedButtonViewer['ShiftLeft']) || (pressedButtonViewer['ShiftRight'])) {
+                    this.layout.forEach((key, index) => {
+                        let keyboardButton = document.querySelector(`.keyboard__key_${key.code}`);
+                        keyboardButton.firstChild.classList.remove("key_hide");
+                        keyboardButton.firstChild.nextSibling.classList.add("key_hide");
+                    });
                     this.isCaps = false;
-                });
+                    console.log("Bingo");
+                }
             });
         }
+        // console.log(this.isCaps);
     };
 };
 
 let pressedButtonViewer = {};
-let currentLanguage = "RUS";
 let my_keyboard = new Keyboard();
 
 document.body.onload = my_keyboard.addKeyboard();
@@ -774,20 +761,18 @@ document.body.onload = my_keyboard.addKeyboard();
 addEventListener("keydown", () => {
     //----------------------Change_Language_Combination
     if ((pressedButtonViewer['ControlLeft']) && (pressedButtonViewer['AltLeft'])) {
-        my_keyboard.addKeyboard();
+        my_keyboard.changeLanguage();
     }
     //----------------------Uppercase_Combination
     if ((pressedButtonViewer['ShiftLeft']) || (pressedButtonViewer['ShiftRight'])) {
         my_keyboard.changeCase();
     }
     if (pressedButtonViewer['CapsLock']) {
-        my_keyboard.changeCase("lock");
+        my_keyboard.changeCase(true);
     }
-    //-----------------------Clear_buffer
-    // if (!(pressedButtonViewer['ShiftLeft']) || (pressedButtonViewer['AltLeft'])) {
-    //     for (const key in pressedButtonViewer) {
-    //         delete pressedButtonViewer[key];
-    //     }
-    // }
-    console.log(Object.keys(pressedButtonViewer).length);
+});
+
+document.querySelector(".keyboard__key_CapsLock").addEventListener('click', function() {
+    //----------------------Uppercase_Combination
+    my_keyboard.changeCase(true);
 });
