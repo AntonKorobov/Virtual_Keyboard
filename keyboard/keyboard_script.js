@@ -657,6 +657,7 @@ class Keyboard {
     constructor(layout = ENG_LAYOUT) {
         this.layout = layout;
         this.isCaps = false;
+        this.pressedButtonsBuffer = {};
     }
 
     changeLanguage() {
@@ -671,9 +672,16 @@ class Keyboard {
     addKeyboard() {
         document.body.innerHTML = '';
 
+        const Text_Area = document.createElement("div");
+        Text_Area.classList.add("text-area-wrapper");
+        document.body.appendChild(Text_Area);
+
+        Text_Area.innerHTML = `<textarea name = "textarea" rows = "10" cols = "50" > Write something here </textarea>`;
+
         const Keyboard_Wrapper = document.createElement("div");
         Keyboard_Wrapper.classList.add("keyboard-wrapper");
         document.body.appendChild(Keyboard_Wrapper);
+
         this.layout.forEach((key, index) => {
             let newElement = document.createElement("div");
             newElement.classList.add("keyboard__key");
@@ -682,8 +690,11 @@ class Keyboard {
             Keyboard_Wrapper.appendChild(newElement);
 
             //--------------------Click-event
-            newElement.addEventListener('click', function() {
-                console.log(key.small);
+            newElement.addEventListener('click', () => {
+
+                if (this.isCaps === false) this.typeInTextArea(key.code, key.small);
+                if (this.isCaps === true) this.typeInTextArea(key.code, key.shift);
+
                 let pressedButton = document.querySelector(`.keyboard__key_${key.code}`);
                 pressedButton.classList.add("keyboard__key_click");
                 pressedButton.addEventListener("animationend", () => {
@@ -696,23 +707,53 @@ class Keyboard {
         document.addEventListener('keydown', (event) => {
             this.layout.forEach((key, index) => {
                 if (event.code == key.code) {
-                    pressedButtonViewer[key.code] = true;
+                    this.pressedButtonsBuffer[key.code] = true;
                     console.log(key.small);
                     let pressedButton = document.querySelector(`.keyboard__key_${key.code}`);
                     pressedButton.classList.add("keyboard__key_tap");
-                    addEventListener('keyup', function(event) {
+                    addEventListener('keyup', (event) => {
                         pressedButton.classList.remove("keyboard__key_tap");
-                        delete pressedButtonViewer[key.code];
+                        delete this.pressedButtonsBuffer[key.code];
                     });
                 };
             });
         });
+
+        addEventListener("keydown", () => {
+            //----------------------Change_Language_Combination
+            if ((this.pressedButtonsBuffer['ControlLeft']) && (this.pressedButtonsBuffer['AltLeft'])) {
+                delete this.pressedButtonsBuffer['ControlLeft'];
+                delete this.pressedButtonsBuffer['AltLeft'];
+                my_keyboard.changeLanguage();
+            }
+            //----------------------Uppercase_Combination
+            if ((this.pressedButtonsBuffer['ShiftLeft']) || (this.pressedButtonsBuffer['ShiftRight'])) {
+                my_keyboard.changeCase();
+            }
+            if (this.pressedButtonsBuffer['CapsLock']) {
+                delete this.pressedButtonsBuffer['CapsLock'];
+                my_keyboard.changeCase(true);
+            }
+        });
+
+        document.querySelector(".keyboard__key_CapsLock").addEventListener('click', () => {
+            //----------------------Uppercase_Combination
+            my_keyboard.changeCase(true);
+        });
+
+        const MESSAGE = document.createElement("div");
+        MESSAGE.classList.add("message");
+        document.body.appendChild(MESSAGE);
+        MESSAGE.innerHTML = `<div>Ctrl+Alt  -  Change language</div><div>"Shift" works bad. I'll try to fix it...</div>`;
+
+        // const Language_button = document.createElement("div");
+        // Language_button.classList.add("language-button");
+        // document.body.appendChild(Language_button);
+        // Language_button.innerHTML = `<button>${this.layout.value}</button>`;
     };
 
     changeCase(isCaps) {
         if (isCaps) {
-            // removeEventListener("keyup", () => { return }); //!!!!
-            // console.log(this.isCaps);
             if (this.isCaps === false) {
                 this.layout.forEach((key, index) => {
                     let keyboardButton = document.querySelector(`.keyboard__key_${key.code}`);
@@ -737,42 +778,75 @@ class Keyboard {
                 keyboardButton.firstChild.nextSibling.classList.remove("key_hide");
             });
             this.isCaps = true;
-            addEventListener('keyup', (event) => { //!!!!!
-                if ((pressedButtonViewer['ShiftLeft']) || (pressedButtonViewer['ShiftRight'])) {
+            addEventListener('keyup', (event) => {
+                if ((this.pressedButtonsBuffer['ShiftLeft']) || (this.pressedButtonsBuffer['ShiftRight'])) {
+                    delete this.pressedButtonsBuffer['ShiftLeft'];
+                    delete this.pressedButtonsBuffer['ShiftRight'];
                     this.layout.forEach((key, index) => {
                         let keyboardButton = document.querySelector(`.keyboard__key_${key.code}`);
                         keyboardButton.firstChild.classList.remove("key_hide");
                         keyboardButton.firstChild.nextSibling.classList.add("key_hide");
                     });
                     this.isCaps = false;
-                    console.log("Bingo");
                 }
             });
         }
-        // console.log(this.isCaps);
     };
+
+    typeInTextArea(inputButton, symbol) {
+        const Text_Area = document.querySelector("textarea");
+        let cursorPos = Text_Area.selectionStart;
+        const left = Text_Area.value.slice(0, cursorPos);
+        const right = Text_Area.value.slice(cursorPos);
+        const inputType = {
+            Tab: () => {
+                Text_Area.value = `${left}\t${right}`;
+                cursorPos += 1;
+            },
+            ArrowLeft: () => {
+                cursorPos = cursorPos - 1 >= 0 ? cursorPos - 1 : 0;
+            },
+            ArrowRight: () => {
+                cursorPos += 1;
+            },
+            ArrowUp: () => {
+                const positionFromLeft = Text_Area.value.slice(0, cursorPos).match(/(\n).*$(?!\1)/g) || [
+                    [1]
+                ];
+                cursorPos -= positionFromLeft[0].length;
+            },
+            ArrowDown: () => {
+                const positionFromLeft = Text_Area.value.slice(cursorPos).match(/^.*(\n).*(?!\1)/) || [
+                    [1]
+                ];
+                cursorPos += positionFromLeft[0].length;
+            },
+            Enter: () => {
+                Text_Area.value = `${left}\n${right}`;
+                cursorPos += 1;
+            },
+            Delete: () => {
+                Text_Area.value = `${left}${right.slice(1)}`;
+            },
+            Backspace: () => {
+                Text_Area.value = `${left.slice(0, -1)}${right}`;
+                cursorPos -= 1;
+            },
+            Space: () => {
+                Text_Area.value = `${left} ${right}`;
+                cursorPos += 1;
+            },
+        }
+        if (inputType[inputButton]) {
+            inputType[inputButton]();
+        } else if ((inputButton !== "ShiftLeft") && (inputButton !== "ShiftRight") && (inputButton !== "AltLeft") && (inputButton !== "AltRight") && (inputButton !== "ControlLeft") && (inputButton !== "ControlRight") && (inputButton !== "Win") && (inputButton !== "CapsLock")) {
+            cursorPos += 1;
+            Text_Area.value = `${left}${symbol || ''}${right}`;
+        }
+        Text_Area.setSelectionRange(cursorPos, cursorPos);
+    }
 };
 
-let pressedButtonViewer = {};
 let my_keyboard = new Keyboard();
 
 document.body.onload = my_keyboard.addKeyboard();
-
-addEventListener("keydown", () => {
-    //----------------------Change_Language_Combination
-    if ((pressedButtonViewer['ControlLeft']) && (pressedButtonViewer['AltLeft'])) {
-        my_keyboard.changeLanguage();
-    }
-    //----------------------Uppercase_Combination
-    if ((pressedButtonViewer['ShiftLeft']) || (pressedButtonViewer['ShiftRight'])) {
-        my_keyboard.changeCase();
-    }
-    if (pressedButtonViewer['CapsLock']) {
-        my_keyboard.changeCase(true);
-    }
-});
-
-document.querySelector(".keyboard__key_CapsLock").addEventListener('click', function() {
-    //----------------------Uppercase_Combination
-    my_keyboard.changeCase(true);
-});
