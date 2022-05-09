@@ -1,4 +1,4 @@
-const RUS_LAYOUT = [{
+const ENG_LAYOUT = [{
         small: '`',
         shift: '~',
         code: 'Backquote',
@@ -345,10 +345,11 @@ class Keyboard {
             newElement.addEventListener('click', function() {
                 console.log(key.small);
                 let pressedButton = document.querySelector(`.keyboard__key_${key.code}`);
-                pressedButton.classList.add("keyboard__key_tap");
+                pressedButton.classList.add("keyboard__key_click");
                 pressedButton.addEventListener("animationend", (animationEvent) => {
-                    pressedButton.classList.remove("keyboard__key_tap");
+                    pressedButton.classList.remove("keyboard__key_click");
                 });
+                // addAnimation("click");
             });
         });
 
@@ -358,17 +359,44 @@ class Keyboard {
             // console.log(this.layout);//!!!!
             currentLayout.forEach((key, index) => {
                 if (event.code == key.code) {
+
+                    pressedButtonViewer[key.code] = true;
+
                     console.log(key.small);
                     let pressedButton = document.querySelector(`.keyboard__key_${key.code}`);
                     pressedButton.classList.add("keyboard__key_tap");
-                    pressedButton.addEventListener("animationend", (animationEvent) => {
+                    document.addEventListener('keyup', function(event) {
                         pressedButton.classList.remove("keyboard__key_tap");
+
+                        pressedButtonViewer[key.code] = false;
                     });
+                    // addAnimation("keydown");
+
+                    //----------------------Change_Language_Combination
+                    if ((pressedButtonViewer['ControlLeft']) && (pressedButtonViewer['AltLeft'])) {
+                        console.log("BINGO!!!!");
+                    }
                 };
             });
         });
+
+        // function addAnimation(typeEvent) {
+        //     if (typeEvent = "click") {
+        //         pressedButton.classList.add("keyboard__key_click");
+        //         pressedButton.addEventListener("animationend", (animationEvent) => {
+        //             pressedButton.classList.remove("keyboard__key_click");
+        //         });
+        //     }
+        //     if (typeEvent = "keydown") {
+        //         pressedButton.classList.add("keyboard__key_tap");
+        //         document.addEventListener('keyup', function(event) {
+        //             pressedButton.classList.remove("keyboard__key_tap");
+        //         });
+        //     }
+        // }
     };
 };
-let my_keyboard = new Keyboard(RUS_LAYOUT);
+let pressedButtonViewer = {};
+let my_keyboard = new Keyboard(ENG_LAYOUT);
 
-document.body.onload = my_keyboard.addKeyboard();;
+document.body.onload = my_keyboard.addKeyboard();

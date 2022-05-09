@@ -36,39 +36,25 @@
     display: none;
 }
 
-@-webkit-keyframes tapping {
-    0% {
-        -webkit-transform: scale(1);
-        transform: scale(1);
-    }
-    50% {
-        -webkit-transform: scale(1.2);
-        transform: scale(1.2);
-    }
-    0% {
-        -webkit-transform: scale(1);
-        transform: scale(1);
-    }
-}
-
 @keyframes tapping {
     0% {
-        -webkit-transform: scale(1);
         transform: scale(1);
     }
-    50% {
-        -webkit-transform: scale(1.2);
-        transform: scale(1.2);
-    }
-    0% {
-        -webkit-transform: scale(1);
-        transform: scale(1);
+    100% {
+        transform: scale(0.9);
     }
 }
 
 .keyboard__key_tap {
-    -webkit-animation-name: tapping;
+    // animation-name: tapping;
+    // animation-duration: 0.1s;
+    transition-duration: 0.1s;
+    transform: scale(0.9);
+    background-color: bisque;
+}
+
+.keyboard__key_click {
     animation-name: tapping;
-    -webkit-animation-duration: 0.1s;
     animation-duration: 0.1s;
+    background-color: bisque;
 }
