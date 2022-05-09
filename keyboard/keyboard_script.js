@@ -655,18 +655,20 @@ const RUS_LAYOUT = [{
 
 class Keyboard {
     constructor() {
-        // this.layout = layout;
+        this.layout = RUS_LAYOUT;
         this.isCaps = false;
     }
 
     addKeyboard() {
-        let currentLayout = ENG_LAYOUT; //!!!!
+        let currentLayout = this.layout; //!!!!
 
         if (currentLanguage === "ENG") {
             currentLayout = RUS_LAYOUT;
+            this.layout = RUS_LAYOUT; //!!!
             currentLanguage = "RUS";
         } else {
             currentLayout = ENG_LAYOUT;
+            this.layout = ENG_LAYOUT; //!!!
             currentLanguage = "ENG"
         }
         document.body.innerHTML = '';
@@ -678,7 +680,7 @@ class Keyboard {
             let newElement = document.createElement("div");
             newElement.classList.add("keyboard__key");
             newElement.classList.add(`keyboard__key_${key.code}`);
-            newElement.innerHTML = `<div class="eng"><div class="caseDown">${key.small}</div><div class="caseUp key_hide">${key.shift}</div></div>`;
+            newElement.innerHTML = `<div class="caseDown">${key.small}</div><div class="caseUp key_hide">${key.shift}</div>`;
             Keyboard_Wrapper.appendChild(newElement);
             //--------------------Click-event
             newElement.addEventListener('click', function() {
@@ -728,11 +730,43 @@ class Keyboard {
         //     }
         // }
     };
+    changeCase(caps) {
+        let currentLayout = this.layout;
+
+        if (caps === "lock") {
+            if (this.isCaps === true) {
+                currentLayout.forEach((key, index) => {
+                    let keyboardButton = document.querySelector(`.keyboard__key_${key.code}`);
+                    keyboardButton.innerHTML = `<div class="caseDown">${key.small}</div><div class="caseUp key_hide">${key.shift||key.small}</div>`;
+                    this.isCaps = false;
+                });
+            } else {
+                currentLayout.forEach((key, index) => {
+                    let keyboardButton = document.querySelector(`.keyboard__key_${key.code}`);
+                    keyboardButton.innerHTML = `<div class="caseDown key_hide">${key.small}</div><div class="caseUp">${key.shift||key.small}</div>`;
+                    this.isCaps = true;
+                });
+            }
+            console.log(this.isCaps);
+        } else {
+            currentLayout.forEach((key, index) => {
+                let keyboardButton = document.querySelector(`.keyboard__key_${key.code}`);
+                keyboardButton.innerHTML = `<div class="caseDown key_hide">${key.small}</div><div class="caseUp">${key.shift||key.small}</div>`;
+                this.isCaps = true;
+            });
+            document.addEventListener('keyup', function(event) {
+                currentLayout.forEach((key, index) => {
+                    let keyboardButton = document.querySelector(`.keyboard__key_${key.code}`);
+                    keyboardButton.innerHTML = `<div class="caseDown">${key.small}</div><div class="caseUp key_hide">${key.shift||key.small}</div>`;
+                    this.isCaps = false;
+                });
+            });
+        }
+    };
 };
 
 let pressedButtonViewer = {};
 let currentLanguage = "RUS";
-
 let my_keyboard = new Keyboard();
 
 document.body.onload = my_keyboard.addKeyboard();
@@ -740,7 +774,20 @@ document.body.onload = my_keyboard.addKeyboard();
 addEventListener("keydown", () => {
     //----------------------Change_Language_Combination
     if ((pressedButtonViewer['ControlLeft']) && (pressedButtonViewer['AltLeft'])) {
-        console.log("BINGO!!!!");
         my_keyboard.addKeyboard();
     }
+    //----------------------Uppercase_Combination
+    if ((pressedButtonViewer['ShiftLeft']) || (pressedButtonViewer['ShiftRight'])) {
+        my_keyboard.changeCase();
+    }
+    if (pressedButtonViewer['CapsLock']) {
+        my_keyboard.changeCase("lock");
+    }
+    //-----------------------Clear_buffer
+    // if (!(pressedButtonViewer['ShiftLeft']) || (pressedButtonViewer['AltLeft'])) {
+    //     for (const key in pressedButtonViewer) {
+    //         delete pressedButtonViewer[key];
+    //     }
+    // }
+    console.log(Object.keys(pressedButtonViewer).length);
 });
